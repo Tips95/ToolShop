@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Корзина{% endblock %}
+{% block content %}
+    <h1 class="mb-4 text-center">Ваша корзина</h1>
+    {% if cart_items %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Товар</th>
+                        <th>Цена</th>
+                        <th>Количество</th>
+                        <th>Сумма</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.tool.name }}</td>
+                            <td>{{ item.tool.price }} руб.</td>
+                            <td>
+                                <input type="number" class="form-control quantity-input w-75" data-tool-id="{{ item.tool.pk }}" data-update-cart-url="{% url 'catalog:update_cart' %}" value="{{ item.quantity }}" min="1">
+                            </td>
+                            <td>{{ item.total }} руб.</td>
+                            <td>
+                                <button class="btn btn-danger remove-from-cart" data-tool-id="{{ item.tool.pk }}" data-update-cart-url="{% url 'catalog:update_cart' %}">Удалить</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <h3 class="text-end">Итого: <span class="text-primary">{{ total_price }} руб.</span></h3>
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{% url 'catalog:tool_list' %}" class="btn btn-outline-secondary">Продолжить покупки</a>
+            <a href="{% url 'catalog:checkout' %}" class="btn btn-primary">Оформить заказ</a>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <h3>Ваша корзина пуста</h3>
+            <a href="{% url 'catalog:tool_list' %}" class="btn btn-primary mt-3">Вернуться в каталог</a>
+        </div>
+    {% endif %}
+{% endblock %}

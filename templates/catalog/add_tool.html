@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Добавить товар{% endblock %}
+{% block content %}
+    <div class="row justify-content-center my-5">
+        <div class="col-md-8">
+            <h1 class="mb-4 text-center">Добавить новый товар</h1>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="addToolForm">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3 form-group">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {% if field.name == 'description' %}
+                                    {{ field }}
+                                {% elif field.name == 'is_popular' %}
+                                    <div class="form-check">
+                                        {{ field }}
+                                        <label for="{{ field.id_for_label }}" class="form-check-label ms-2">{{ field.label }}</label>
+                                    </div>
+                                {% else %}
+                                    <div class="input-wrapper">
+                                        {{ field }}
+                                    </div>
+                                {% endif %}
+                                {% if field.errors %}
+                                    <div class="text-danger">{{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary" id="submitButton">
+                                <span class="default-text">Добавить товар</span>
+                                <span class="loading-text" style="display: none;">Отправка...</span>
+                            </button>
+                            <a href="{% url 'catalog:tool_list' %}" class="btn btn-outline-secondary">Назад к каталогу</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('addToolForm').addEventListener('submit', function() {
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = true;
+            submitButton.querySelector('.default-text').style.display = 'none';
+            submitButton.querySelector('.loading-text').style.display = 'inline';
+        });
+
+        document.getElementById('{{ form.image.id_for_label }}').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            if (file) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.style.maxWidth = '200px';
+                img.style.borderRadius = '5px';
+                preview.appendChild(img);
+            }
+        });
+    </script>
+{% endblock %}

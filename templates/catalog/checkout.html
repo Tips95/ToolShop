@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Оформление заказа{% endblock %}
+{% block content %}
+    <h1 class="mb-4 text-center">Оформление заказа</h1>
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+    {% if cart_items %}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="mb-3">Ваши данные</h3>
+                        <form method="post">
+                            {% csrf_token %}
+                            {% for field in form %}
+                                <div class="mb-3 form-group">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="text-danger">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary w-100">Оформить заказ</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h3 class="mb-3">Ваш заказ</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Товар</th>
+                                <th>Количество</th>
+                                <th>Сумма</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cart_items %}
+                                <tr>
+                                    <td>{{ item.tool.name }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ item.total }} руб.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <h4 class="text-end">Итого: <span class="text-primary">{{ total_price }} руб.</span></h4>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <h3>Ваша корзина пуста</h3>
+            <a href="{% url 'catalog:tool_list' %}" class="btn btn-primary mt-3">Вернуться в каталог</a>
+        </div>
+    {% endif %}
+{% endblock %}
