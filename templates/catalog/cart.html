@@ -4,7 +4,7 @@
     <h1 class="mb-4 text-center">Ваша корзина</h1>
     {% if cart_items %}
         <div class="table-responsive">
-            <table class="table table-hover align-middle">
+            <table class="table table-hover align-middle" id="cart-table">
                 <thead class="table-dark">
                     <tr>
                         <th>Товар</th>
@@ -16,7 +16,7 @@
                 </thead>
                 <tbody>
                     {% for item in cart_items %}
-                        <tr>
+                        <tr id="cart-item-{{ item.tool.pk }}">
                             <td>{{ item.tool.name }}</td>
                             <td>{{ item.tool.price }} руб.</td>
                             <td>
@@ -31,7 +31,7 @@
                 </tbody>
             </table>
         </div>
-        <h3 class="text-end">Итого: <span class="text-primary">{{ total_price }} руб.</span></h3>
+        <h3 class="text-end" id="total-price">Итого: <span class="text-primary">{{ total_price }} руб.</span></h3>
         <div class="d-flex justify-content-between mt-4">
             <a href="{% url 'catalog:tool_list' %}" class="btn btn-outline-secondary">Продолжить покупки</a>
             <a href="{% url 'catalog:checkout' %}" class="btn btn-primary">Оформить заказ</a>

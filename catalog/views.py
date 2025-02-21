@@ -2,17 +2,20 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required  # Исправленный импорт
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import login
+from django.contrib import messages
 from .models import Tool, Category
 from .forms import OrderForm, RegisterForm, ToolForm
+from django.views.decorators.csrf import csrf_exempt
 
 def tool_list(request):
     category_id = request.GET.get('category')
     search_query = request.GET.get('q')
     
-    tools = Tool.objects.all()
+    tools = Tool.objects.all().order_by('id')  # Добавляем порядок
     categories = Category.objects.all()
     popular_tools = Tool.objects.filter(is_popular=True)[:3]
     
@@ -37,20 +40,28 @@ def tool_detail(request, pk):
     tool = get_object_or_404(Tool, pk=pk)
     return render(request, 'catalog/tool_detail.html', {'tool': tool})
 
+@csrf_exempt
 def add_to_cart(request):
     if request.method == 'POST':
         tool_id = request.POST.get('tool_id')
-        tool = get_object_or_404(Tool, id=tool_id)
-        cart = request.session.get('cart', {})
-        
-        new_quantity = cart.get(tool_id, 0) + 1
-        if new_quantity > tool.stock:
-            return JsonResponse({'status': 'error', 'message': f'Недостаточно товара "{tool.name}" на складе (в наличии: {tool.stock} шт.)'})
-        
-        cart[tool_id] = new_quantity
-        request.session['cart'] = cart
-        return JsonResponse({'status': 'success', 'cart_count': sum(cart.values())})
-    return JsonResponse({'status': 'error'})
+        print(f"Received POST request to add tool_id: {tool_id}")
+        print(f"CSRF Token from header: {request.META.get('HTTP_X_CSRFTOKEN')}")
+        print(f"CSRF Token from body: {request.POST.get('csrfmiddlewaretoken')}")
+        try:
+            tool = Tool.objects.get(id=tool_id)
+            cart = request.session.get('cart', {})
+            new_quantity = cart.get(tool_id, 0) + 1
+            if new_quantity > tool.stock:
+                return JsonResponse({'status': 'error', 'message': f'Недостаточно товара "{tool.name}" на складе (в наличии: {tool.stock} шт.)'})
+            cart[tool_id] = new_quantity
+            request.session['cart'] = cart
+            request.session.modified = True
+            print(f"Cart updated: {cart}")
+            return JsonResponse({'status': 'success', 'cart_count': sum(cart.values())})
+        except Tool.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Товар не найден'})
+    print("Invalid request method")
+    return JsonResponse({'status': 'error', 'message': 'Неверный запрос'})
 
 
 def register(request):
@@ -69,17 +80,25 @@ def cart_view(request):
     cart = request.session.get('cart', {})
     cart_items = []
     total_price = 0
-    
+    updated_cart = cart.copy()
+
     for tool_id, quantity in cart.items():
-        tool = get_object_or_404(Tool, id=tool_id)
-        item_total = tool.price * quantity
-        cart_items.append({
-            'tool': tool,
-            'quantity': quantity,
-            'total': item_total
-        })
-        total_price += item_total
-    
+        try:
+            tool = Tool.objects.get(id=tool_id)
+            item_total = tool.price * quantity
+            cart_items.append({
+                'tool': tool,
+                'quantity': quantity,
+                'total': item_total
+            })
+            total_price += item_total
+        except Tool.DoesNotExist:
+            del updated_cart[tool_id]
+
+    if updated_cart != cart:
+        request.session['cart'] = updated_cart
+        request.session.modified = True
+
     return render(request, 'catalog/cart.html', {
         'cart_items': cart_items,
         'total_price': total_price
@@ -89,20 +108,52 @@ def update_cart(request):
     if request.method == 'POST':
         tool_id = request.POST.get('tool_id')
         action = request.POST.get('action')
+        print(f"Received POST request to update_cart: tool_id={tool_id}, action={action}")
+        print(f"CSRF Token from body: {request.POST.get('csrfmiddlewaretoken')}")
+        print(f"CSRF Token from header: {request.META.get('HTTP_X_CSRFTOKEN')}")
         cart = request.session.get('cart', {})
         
         if action == 'update':
             quantity = int(request.POST.get('quantity', 1))
-            if quantity > 0:
+            if quantity > 0 and tool_id in cart:
                 cart[tool_id] = quantity
-            else:
-                cart.pop(tool_id, None)
-        elif action == 'remove':
-            cart.pop(tool_id, None)
+            elif quantity <= 0 and tool_id in cart:
+                del cart[tool_id]
+        elif action == 'remove' and tool_id in cart:
+            del cart[tool_id]
         
+        total_price = 0
+        for t_id, qty in cart.items():
+            try:
+                tool = Tool.objects.get(id=t_id)
+                total_price += tool.price * qty
+            except Tool.DoesNotExist:
+                del cart[t_id]
+
         request.session['cart'] = cart
-        return JsonResponse({'status': 'success', 'cart_count': sum(cart.values())})
+        request.session.modified = True
+        return JsonResponse({
+            'status': 'success',
+            'cart_count': sum(cart.values()),
+            'total_price': float(total_price)
+        })
     return JsonResponse({'status': 'error'})
+
+
+@login_required
+@staff_member_required
+def add_tool(request):
+    if request.method == 'POST':
+        form = ToolForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Товар успешно добавлен!')
+            return redirect('catalog:tool_list')
+        else:
+            print(form.errors)
+    else:
+        form = ToolForm()
+    return render(request, 'catalog/add_tool.html', {'form': form})
 
 
 @login_required
@@ -177,3 +228,8 @@ def add_tool(request):
     else:
         form = ToolForm()
     return render(request, 'catalog/add_tool.html', {'form': form})
+
+
+def about(request):
+    return render(request, 'catalog/about.html')
+

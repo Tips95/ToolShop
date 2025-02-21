@@ -1,32 +1,66 @@
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f5f6fa;
+    background: linear-gradient(45deg, #ffcc99, #ffffff, #ffcc99, #ffffff);
+    background-size: 400% 400%;
+    animation: gradientAnimation 15s ease infinite;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
+    margin: 0;
+    padding: 0;
 }
 
-.navbar {
+@keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.particles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+.content-wrapper {
+    flex: 1 0 auto;
+    padding: 20px;
+}
+
+.custom-navbar {
+    background-color: #ff9966;
     padding: 1rem 0;
 }
 
 .navbar-brand {
     font-size: 1.5rem;
+    color: #fff;
+}
+
+.navbar-brand:hover {
+    color: #fff;
 }
 
 .nav-link {
     font-weight: 500;
     transition: color 0.3s;
+    color: #fff;
 }
 
 .nav-link:hover {
     color: #fff;
+    text-decoration: underline;
 }
 
 .card {
     border: none;
     border-radius: 10px;
     transition: transform 0.3s, box-shadow 0.3s;
+    background: rgba(255, 255, 255, 0.9);
 }
 
 .card.hover-effect:hover {
@@ -79,7 +113,7 @@ input[type="file"] {
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: #ff9966;
     border: none;
     padding: 10px 20px;
     border-radius: 5px;
@@ -87,12 +121,19 @@ input[type="file"] {
 }
 
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #e67e22;
 }
 
 .btn-outline-primary {
     border-radius: 5px;
     padding: 8px 16px;
+    border-color: #ff9966;
+    color: #ff9966;
+}
+
+.btn-outline-primary:hover {
+    background-color: #ff9966;
+    color: #fff;
 }
 
 .btn-outline-secondary {
@@ -106,24 +147,66 @@ input[type="file"] {
 
 footer {
     background-color: #212529;
+    flex-shrink: 0;
 }
 
-/* Центрирование изображений */
 .image-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 200px; /* Фиксированная высота для каталога */
+    height: 200px;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1;
+    position: relative;
 }
 
 .image-container img {
     max-height: 100%;
     width: auto;
-    object-fit: contain; /* Сохраняет пропорции изображения */
+    object-fit: contain;
+}
+
+.image-container-detail {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 300px;           /* Уменьшаем до 300px, ближе к каталогу */
+    max-height: 300px;       /* Ограничиваем высоту */
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1;
+    position: relative;
+}
+
+.image-container-detail img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
 .card-img-top {
     border-top-left-radius: 10px;
     border-top-right-radius: 10px;
+}
+
+.carousel-item {
+    transition: transform 0.6s ease-in-out;
+}
+
+.carousel-control-prev, .carousel-control-next {
+    width: 5%;
+}
+
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    background-color: #ff9966;
+    border-radius: 50%;
+    padding: 10px;
+}
+
+.carousel-item .card {
+    margin: 0 auto;
 }

@@ -12,5 +12,6 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('order-success/', views.order_success, name='order_success'),
     path('register/', views.register, name='register'),
-    path('add-tool/', views.add_tool, name='add_tool'),  # Убедитесь, что этот маршрут есть
+    path('add-tool/', views.add_tool, name='add_tool'),
+    path('about/', views.about, name='about'),  # Новый маршрут
 ]

@@ -37,6 +37,9 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
 ]
 
+CSRF_COOKIE_SECURE = False  # Для разработки
+CSRF_COOKIE_HTTPONLY = False
+
 ROOT_URLCONF = 'ToolShop.urls'
 
 TEMPLATES = [
